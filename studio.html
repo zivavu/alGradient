@@ -71,6 +71,7 @@
   .scale-btn:hover{color:var(--ink);border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.06)}
   .scale-btn.active{border-color:var(--accent);color:var(--ink);background:rgba(255,61,127,.12)}
 
+  .sub-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dimmer);margin:12px 0 0}
   .res-preview{font-size:11px;color:var(--dimmer);letter-spacing:.08em;margin-top:9px;text-align:center}
 
   .ctrl{margin-bottom:15px}
@@ -88,12 +89,30 @@
 
   .swatches{display:flex;gap:8px;margin-bottom:14px}
   .sw{position:relative;flex:1;aspect-ratio:1;border-radius:8px;overflow:hidden;
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);cursor:pointer}
-  .sw input{position:absolute;inset:-6px;width:130%;height:130%;border:none;background:none;cursor:pointer;opacity:0}
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);cursor:pointer;transition:transform .12s}
+  .sw:hover{transform:scale(1.05)}
+  .sw.active{box-shadow:inset 0 0 0 2px var(--accent),0 0 0 1px var(--accent)}
   .presets{display:flex;flex-wrap:wrap;gap:7px}
   .preset{font-size:11px;letter-spacing:.05em;padding:6px 11px;border:1px solid var(--line);
     border-radius:20px;color:var(--dim);background:none;cursor:pointer;transition:all .15s}
   .preset:hover{color:var(--ink);border-color:rgba(255,255,255,.3)}
+
+  .picker-wrap{display:none;gap:10px;margin-top:12px;padding:12px;
+    background:var(--bg);border:1px solid var(--line);border-radius:10px;flex-direction:column}
+  .picker-wrap.open{display:flex}
+  .sl-area{position:relative;width:100%;aspect-ratio:1.6;border-radius:6px;overflow:hidden;
+    cursor:crosshair;background:linear-gradient(to bottom,transparent,#000),linear-gradient(to right,#fff,#f00)}
+  .sl-cursor{position:absolute;width:12px;height:12px;border:2px solid #fff;border-radius:50%;
+    box-shadow:0 0 0 1px rgba(0,0,0,.5);transform:translate(-50%,-50%);pointer-events:none}
+  .hue-track{position:relative;width:100%;height:14px;border-radius:7px;
+    background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);cursor:pointer}
+  .hue-thumb{position:absolute;top:-2px;width:18px;height:18px;border-radius:50%;background:#fff;
+    border:2px solid rgba(0,0,0,.3);box-shadow:0 1px 3px rgba(0,0,0,.4);transform:translateX(-50%);pointer-events:none}
+  .picker-row{display:flex;gap:8px;align-items:center}
+  .picker-hex{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:6px;
+    padding:6px 10px;color:var(--ink);font-family:'DM Mono',monospace;font-size:12px;text-align:center;
+    text-transform:uppercase;outline:none;letter-spacing:.04em}
+  .picker-hex:focus{border-color:var(--accent)}
 
   .btn-row{display:flex;gap:9px;margin-top:6px}
   .btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
@@ -136,7 +155,10 @@
   <div class="group">
     <h3>Canvas</h3>
     <div class="btn-grid col6" id="ratios"></div>
+    <div class="sub-label">Export scale</div>
     <div class="scale-row" id="scales"></div>
+    <div class="sub-label">Anti-aliasing</div>
+    <div class="scale-row" id="aaRow"></div>
     <div class="res-preview" id="resPreview">1080 × 1920 px</div>
   </div>
 
@@ -148,6 +170,13 @@
   <div class="group">
     <h3>Palette</h3>
     <div class="swatches" id="swatches"></div>
+    <div class="picker-wrap" id="picker">
+      <div class="sl-area" id="slArea"><div class="sl-cursor" id="slCursor"></div></div>
+      <div class="hue-track" id="hueTrack"><div class="hue-thumb" id="hueThumb"></div></div>
+      <div class="picker-row">
+        <input class="picker-hex" id="pickerHex" maxlength="7">
+      </div>
+    </div>
     <div class="presets" id="presets"></div>
   </div>
 
@@ -297,9 +326,27 @@ void main(){
   blob*=mix(0.55,1.,vfade);
   float mask=smoothstep(uThresh-uSoft,uThresh+uSoft,blob);
 
-  vec3 col=palette(v)*mask;
-  col+=(hash21(gl_FragCoord.xy)-0.5)*(uGrain*0.02);
+  vec3 col=palette(v)*mask;       // grain added later, in the downsample pass
   outColor=vec4(max(col,0.),1.);
+}`;
+
+/* ── Downsample / present pass (SSAA resolve + grain) ── */
+const VERT_BLIT = `#version 300 es
+out vec2 vUv;
+const vec2 v[3]=vec2[3](vec2(-1.,-1.),vec2(3.,-1.),vec2(-1.,3.));
+void main(){ vec2 p=v[gl_VertexID]; vUv=p*0.5+0.5; gl_Position=vec4(p,0.,1.); }`;
+
+const FRAG_BLIT = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uTex;
+uniform float uLod;
+uniform float uGrain;
+float hash21(vec2 p){ p=fract(p*vec2(123.34,345.45)); p+=dot(p,p+34.345); return fract(p.x*p.y); }
+void main(){
+  vec3 c=textureLod(uTex,vUv,uLod).rgb;   // box-filtered downsample via mip LOD
+  c+=(hash21(gl_FragCoord.xy)-0.5)*(uGrain*0.02);   // grain at output resolution
+  o=vec4(max(c,0.),1.);
 }`;
 
 /* ─── Constants ─────────────────────────────────────── */
@@ -324,13 +371,20 @@ const SCALES = [
   {label:'4×', mult:4},
 ];
 
+const AA_OPTS = [
+  {label:'Off', ss:1},
+  {label:'2×',  ss:2},
+  {label:'4×',  ss:4},
+];
+
 let currentMode  = 0;
-let currentRatio = 0;   // index into RATIOS
+let currentRatio = 1;   // index into RATIOS — default 1:1
 let currentScale = 0;   // index into SCALES
+let currentAA    = 1;   // index into AA_OPTS — default 2×
 
 /* ─── Params ────────────────────────────────────────── */
 const params = {
-  scale:    {v:0.85, min:0.15, max:8.0,  step:0.005, label:'Scale',     grp:'field' },
+  scale:    {v:3, min:0.15, max:8.0,  step:0.005, label:'Scale',     grp:'field' },
   warp:     {v:2.50, min:0.0,  max:8.0,  step:0.01,  label:'Warp',      grp:'field' },
   angle:    {v:1.05, min:0.0,  max:6.283,step:0.001, label:'Angle',     grp:'light' },
   light:    {v:1.60, min:0.0,  max:6.0,  step:0.01,  label:'Crease',    grp:'light' },
@@ -377,19 +431,76 @@ function compile(type,src){
   if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
   return s;
 }
-const prog=gl.createProgram();
-gl.attachShader(prog,compile(gl.VERTEX_SHADER,VERT));
-gl.attachShader(prog,compile(gl.FRAGMENT_SHADER,FRAG));
-gl.linkProgram(prog);
-if(!gl.getProgramParameter(prog,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
-gl.useProgram(prog);
+function link(vsrc,fsrc){
+  const p=gl.createProgram();
+  gl.attachShader(p,compile(gl.VERTEX_SHADER,vsrc));
+  gl.attachShader(p,compile(gl.FRAGMENT_SHADER,fsrc));
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  return p;
+}
+const prog     = link(VERT, FRAG);
+const progBlit = link(VERT_BLIT, FRAG_BLIT);
 
 const U={};
 for(const n of ['uRes','uSeed','uScale','uWarp','uAngle','uLight','uContrast','uGamma','uGrain',
                  'uSpread','uThresh','uSoft','uMode','uC0','uC1','uC2','uC3','uC4'])
   U[n]=gl.getUniformLocation(prog,n);
+const UB={};
+for(const n of ['uTex','uLod','uGrain']) UB[n]=gl.getUniformLocation(progBlit,n);
 
 gl.bindVertexArray(gl.createVertexArray());
+
+/* ─── Supersampled hi-res buffer (recreated on size change) ─── */
+let hiTex=null, hiFbo=null, hiW=0, hiH=0;
+function ensureHi(w,h){
+  if(w===hiW && h===hiH && hiTex) return;
+  if(hiTex) gl.deleteTexture(hiTex);
+  if(hiFbo) gl.deleteFramebuffer(hiFbo);
+  hiTex=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,hiTex);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  hiFbo=gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER,hiFbo);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,hiTex,0);
+  hiW=w; hiH=h;
+}
+
+// Render gradient at outW×outH with `aa`× supersampling into outFbo (null = screen).
+// maxHi caps the hi-res buffer's longest side to stay within GPU limits.
+function renderTo(outFbo, outW, outH, aa, maxHi){
+  let ss=aa;
+  const maxSide=Math.max(outW,outH);
+  if(maxSide*ss > maxHi) ss=Math.max(maxHi/maxSide, 1);
+  const hw=Math.round(outW*ss), hh=Math.round(outH*ss);
+  ensureHi(hw,hh);
+
+  // pass 1 — gradient → hi-res buffer
+  gl.useProgram(prog);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,hiFbo);
+  gl.viewport(0,0,hw,hh);
+  setUniforms(hw,hh);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+
+  // mip chain = successive box downsamples
+  gl.bindTexture(gl.TEXTURE_2D,hiTex);
+  gl.generateMipmap(gl.TEXTURE_2D);
+
+  // pass 2 — downsample + grain → output
+  gl.useProgram(progBlit);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,outFbo);
+  gl.viewport(0,0,outW,outH);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D,hiTex);
+  gl.uniform1i(UB.uTex,0);
+  gl.uniform1f(UB.uLod, Math.log2(hw/outW));
+  gl.uniform1f(UB.uGrain, params.grain.v);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+}
 
 function hex2rgb(h){ const v=parseInt(h.slice(1),16); return [((v>>16)&255)/255,((v>>8)&255)/255,(v&255)/255]; }
 
@@ -440,10 +551,7 @@ window.addEventListener('resize', ()=>{ updateFrameSize(); resize(); });
 function frame(){
   resize();
   if(needsRender){
-    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
-    gl.viewport(0,0,canvas.width,canvas.height);
-    setUniforms(canvas.width,canvas.height);
-    gl.drawArrays(gl.TRIANGLES,0,3);
+    renderTo(null, canvas.width, canvas.height, AA_OPTS[currentAA].ss, 6144);
     needsRender=false;
   }
   requestAnimationFrame(frame);
@@ -454,6 +562,7 @@ function exportPNG(){
   const btn=document.getElementById('exportBtn'); btn.classList.add('busy');
   const {W,H}=getExportSize();
 
+  // output FBO at target resolution
   const tex=gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D,tex);
   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,W,H,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
@@ -463,8 +572,11 @@ function exportPNG(){
   const fbo=gl.createFramebuffer();
   gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);
   gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);
-  gl.viewport(0,0,W,H); setUniforms(W,H); gl.drawArrays(gl.TRIANGLES,0,3);
+
+  renderTo(fbo, W, H, AA_OPTS[currentAA].ss, 8192);   // supersampled export
+
   const px=new Uint8Array(W*H*4);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);
   gl.readPixels(0,0,W,H,gl.RGBA,gl.UNSIGNED_BYTE,px);
   gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.deleteFramebuffer(fbo); gl.deleteTexture(tex); invalidate();
 
@@ -525,7 +637,7 @@ MODES.forEach(m=>{
 // Ratio buttons
 const ratioGrid=document.getElementById('ratios');
 RATIOS.forEach((r,i)=>{
-  const b=document.createElement('button'); b.className='grid-btn'+(i===0?' active':'');
+  const b=document.createElement('button'); b.className='grid-btn'+(i===currentRatio?' active':'');
   b.textContent=r.label;
   b.addEventListener('click',()=>{
     currentRatio=i;
@@ -539,7 +651,7 @@ RATIOS.forEach((r,i)=>{
 // Scale buttons
 const scaleRow=document.getElementById('scales');
 SCALES.forEach((s,i)=>{
-  const b=document.createElement('button'); b.className='scale-btn'+(i===0?' active':'');
+  const b=document.createElement('button'); b.className='scale-btn'+(i===currentScale?' active':'');
   b.textContent=s.label;
   b.addEventListener('click',()=>{
     currentScale=i;
@@ -550,17 +662,30 @@ SCALES.forEach((s,i)=>{
   scaleRow.appendChild(b);
 });
 
+// Anti-aliasing buttons
+const aaRow=document.getElementById('aaRow');
+AA_OPTS.forEach((a,i)=>{
+  const b=document.createElement('button'); b.className='scale-btn'+(i===currentAA?' active':'');
+  b.textContent=a.label;
+  b.addEventListener('click',()=>{
+    currentAA=i;
+    aaRow.querySelectorAll('.scale-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    invalidate();
+  });
+  aaRow.appendChild(b);
+});
+
 // Swatches
 function buildSwatches(){
   const c=document.getElementById('swatches'); c.innerHTML='';
+  closePicker();
   palette.forEach((hex,i)=>{
     const sw=document.createElement('div'); sw.className='sw'; sw.style.background=hex;
-    const inp=document.createElement('input'); inp.type='color'; inp.value=hex;
-    inp.addEventListener('input',()=>{ palette[i]=inp.value; sw.style.background=inp.value; invalidate(); });
-    sw.appendChild(inp); c.appendChild(sw);
+    sw.addEventListener('click',()=> openPicker(i,sw));
+    c.appendChild(sw);
   });
 }
-buildSwatches();
 
 // Presets
 for(const name in PRESETS){
@@ -570,21 +695,15 @@ for(const name in PRESETS){
 }
 
 // Color randomizer
-function hsl2hex(h,s,l){
-  h=((h%360)+360)%360; s/=100; l/=100;
-  const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l);
-  const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+function randomHex(){
+  const h=Math.random()*360, s=40+Math.random()*60, l=0+Math.random()*100;
+  const k=n=>(n+h/30)%12, a=(s/100)*Math.min(l/100,1-l/100);
+  const f=n=>(l/100)-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
   const to=x=>Math.round(x*255).toString(16).padStart(2,'0');
   return '#'+to(f(0))+to(f(8))+to(f(4));
 }
 function randomizeColors(){
-  const base=Math.random()*360, dir=Math.random()<0.5?1:-1, drift=40+Math.random()*70;
-  palette=['#000000',
-    hsl2hex(base,82,16),
-    hsl2hex(base+dir*drift*0.3,88,46),
-    hsl2hex(base+dir*drift*0.7,92,56),
-    hsl2hex(base+dir*drift,95,70),
-  ];
+  palette = Array.from({length:5}, randomHex);
   buildSwatches(); invalidate();
 }
 
@@ -602,6 +721,123 @@ function toast(msg){
   const t=document.getElementById('toast'); t.textContent=msg;
   t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800);
 }
+
+/* ─── Custom color picker ───────────────────────────── */
+function hexToRgb255(h){ const v=parseInt(h.slice(1),16); return [(v>>16)&255,(v>>8)&255,v&255]; }
+function rgb255ToHex(r,g,b){ const to=x=>Math.round(x).toString(16).padStart(2,'0'); return '#'+to(r)+to(g)+to(b); }
+function rgbToHsv(r,g,b){
+  r/=255; g/=255; b/=255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b), d=max-min;
+  let h=0, s=max===0?0:d/max, v=max;
+  if(d){
+    switch(max){
+      case r: h=((g-b)/d+(g<b?6:0)); break;
+      case g: h=((b-r)/d+2); break;
+      case b: h=((r-g)/d+4); break;
+    }
+    h*=60;
+  }
+  return [h,s*100,v*100];
+}
+function hsvToRgb(h,s,v){
+  s/=100; v/=100;
+  const c=v*s, x=c*(1-Math.abs((h/60)%2-1)), m=v-c;
+  let [r,g,b]=[0,0,0];
+  if(h<60) [r,g,b]=[c,x,0];
+  else if(h<120) [r,g,b]=[x,c,0];
+  else if(h<180) [r,g,b]=[0,c,x];
+  else if(h<240) [r,g,b]=[0,x,c];
+  else if(h<300) [r,g,b]=[x,0,c];
+  else [r,g,b]=[c,0,x];
+  return [Math.round((r+m)*255),Math.round((g+m)*255),Math.round((b+m)*255)];
+}
+function hexToHsv(hex){ return rgbToHsv(...hexToRgb255(hex)); }
+function hsvToHex(h,s,v){ return rgb255ToHex(...hsvToRgb(h,s,v)); }
+
+let pickerIdx=-1, pickerH=0, pickerS=0, pickerV=0;
+const pickerEl=document.getElementById('picker');
+const slArea=document.getElementById('slArea');
+const slCursor=document.getElementById('slCursor');
+const hueTrack=document.getElementById('hueTrack');
+const hueThumb=document.getElementById('hueThumb');
+const pickerHex=document.getElementById('pickerHex');
+
+function updatePickerUI(){
+  slArea.style.background=`linear-gradient(to bottom,transparent,#000),linear-gradient(to right,#fff,hsl(${pickerH},100%,50%))`;
+  slCursor.style.left=`${pickerS}%`;
+  slCursor.style.top=`${100-pickerV}%`;
+  hueThumb.style.left=`${pickerH/3.6}%`;
+  pickerHex.value=hsvToHex(pickerH,pickerS,pickerV);
+}
+function applyPicker(){
+  if(pickerIdx<0) return;
+  const hex=hsvToHex(pickerH,pickerS,pickerV);
+  palette[pickerIdx]=hex;
+  const swatches=document.getElementById('swatches').children;
+  if(swatches[pickerIdx]) swatches[pickerIdx].style.background=hex;
+  invalidate();
+}
+function openPicker(idx,swEl){
+  pickerIdx=idx;
+  const [h,s,v]=hexToHsv(palette[idx]);
+  pickerH=h; pickerS=s; pickerV=v;
+  document.querySelectorAll('.sw').forEach(s=>s.classList.remove('active'));
+  swEl.classList.add('active');
+  pickerEl.classList.add('open');
+  updatePickerUI();
+}
+function closePicker(){
+  pickerIdx=-1;
+  pickerEl.classList.remove('open');
+  document.querySelectorAll('.sw').forEach(s=>s.classList.remove('active'));
+}
+
+let dragging=null;
+function onDown(target,e){
+  dragging=target;
+  onMove(e);
+  e.preventDefault();
+}
+function onMove(e){
+  if(!dragging) return;
+  const rect=(dragging==='sl'?slArea:hueTrack).getBoundingClientRect();
+  const x=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+  const y=Math.max(0,Math.min(1,(e.clientY-rect.top)/rect.height));
+  if(dragging==='sl'){
+    pickerS=x*100;
+    pickerV=(1-y)*100;
+  } else {
+    pickerH=x*360;
+  }
+  updatePickerUI();
+  applyPicker();
+}
+function onUp(){ dragging=null; }
+slArea.addEventListener('mousedown',e=>onDown('sl',e));
+hueTrack.addEventListener('mousedown',e=>onDown('hue',e));
+window.addEventListener('mousemove',onMove);
+window.addEventListener('mouseup',onUp);
+
+pickerHex.addEventListener('change',()=>{
+  let v=pickerHex.value;
+  if(!/^#[0-9a-fA-F]{6}$/.test(v)){
+    if(/^#[0-9a-fA-F]{3}$/.test(v)) v='#'+v[1]+v[1]+v[2]+v[2]+v[3]+v[3];
+    else return;
+  }
+  const [h,s,vv]=hexToHsv(v);
+  pickerH=h; pickerS=s; pickerV=vv;
+  updatePickerUI();
+  applyPicker();
+});
+
+document.addEventListener('click',e=>{
+  if(pickerEl.classList.contains('open') && !pickerEl.contains(e.target) && !e.target.closest('.sw')){
+    closePicker();
+  }
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') closePicker();
+});
 
 // Init
 randomizeColors();

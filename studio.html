@@ -35,8 +35,7 @@
     align-items:center;
     justify-content:center;
     position:relative;
-    background:
-      radial-gradient(120% 120% at 50% 0%, #101012 0%, #070708 60%);
+    background:radial-gradient(120% 120% at 50% 0%, #101012 0%, #070708 60%);
   }
   .stage::before{
     content:'';position:absolute;inset:0;
@@ -46,8 +45,7 @@
     background-size:46px 46px;
     -webkit-mask-image:radial-gradient(70% 70% at 50% 50%,#000 0%,transparent 80%);
             mask-image:radial-gradient(70% 70% at 50% 50%,#000 0%,transparent 80%);
-    opacity:.5;
-    pointer-events:none;
+    opacity:.5;pointer-events:none;
   }
   .frame{
     position:relative;
@@ -62,52 +60,30 @@
   }
   canvas#gl{display:block;width:100%;height:100%}
 
-  .stamp{
-    position:absolute;left:22px;top:18px;z-index:3;
+  .stamp{position:absolute;left:22px;top:18px;z-index:3;
     font-size:11px;letter-spacing:.32em;text-transform:uppercase;
-    color:rgba(255,255,255,.5);mix-blend-mode:overlay;
-    pointer-events:none;
-  }
-  .res{
-    position:absolute;right:22px;bottom:18px;z-index:3;
+    color:rgba(255,255,255,.5);mix-blend-mode:overlay;pointer-events:none}
+  .res{position:absolute;right:22px;bottom:18px;z-index:3;
     font-size:11px;letter-spacing:.18em;
-    color:rgba(255,255,255,.45);mix-blend-mode:overlay;
-    pointer-events:none;
-  }
+    color:rgba(255,255,255,.45);mix-blend-mode:overlay;pointer-events:none}
 
   /* ─── Panel ─────────────────────────────────── */
   .panel{
-    width:360px;
-    flex-shrink:0;
-    background:var(--panel);
-    border-left:1px solid var(--line);
-    height:100vh;
-    overflow-y:auto;
-    padding:26px 24px 60px;
+    width:360px;flex-shrink:0;
+    background:var(--panel);border-left:1px solid var(--line);
+    height:100vh;overflow-y:auto;padding:26px 24px 60px;
   }
   .panel::-webkit-scrollbar{width:8px}
   .panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px}
 
-  .brand{
-    font-family:'Instrument Serif',serif;
-    font-size:38px;line-height:.9;
-    letter-spacing:-.01em;
-    margin-bottom:2px;
-  }
+  .brand{font-family:'Instrument Serif',serif;font-size:38px;line-height:.9;letter-spacing:-.01em;margin-bottom:2px}
   .brand em{font-style:italic;color:var(--accent)}
-  .tagline{
-    font-size:11px;letter-spacing:.22em;text-transform:uppercase;
-    color:var(--dim);margin-bottom:26px;
-  }
+  .tagline{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin-bottom:26px}
 
   .group{margin-bottom:26px}
   .group h3{
-    font-family:'DM Mono',monospace;
-    font-weight:500;
-    font-size:10px;letter-spacing:.28em;text-transform:uppercase;
-    color:var(--dimmer);
-    padding-bottom:10px;margin-bottom:14px;
-    border-bottom:1px solid var(--line);
+    font-weight:500;font-size:10px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--dimmer);padding-bottom:10px;margin-bottom:14px;border-bottom:1px solid var(--line);
   }
 
   .ctrl{margin-bottom:15px}
@@ -115,65 +91,41 @@
   .ctrl label{font-size:12px;letter-spacing:.04em;color:var(--ink)}
   .ctrl .val{font-size:11px;color:var(--accent);font-variant-numeric:tabular-nums}
 
-  input[type=range]{
-    -webkit-appearance:none;appearance:none;
-    width:100%;height:2px;background:rgba(255,255,255,.14);
-    outline:none;cursor:pointer;border-radius:2px;
-  }
-  input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none;appearance:none;
-    width:13px;height:13px;border-radius:50%;
-    background:var(--ink);border:2px solid var(--bg);
-    box-shadow:0 0 0 1px rgba(255,255,255,.2);
-    transition:transform .12s, background .12s;
-  }
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;
+    background:rgba(255,255,255,.14);outline:none;cursor:pointer;border-radius:2px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+    width:13px;height:13px;border-radius:50%;background:var(--ink);border:2px solid var(--bg);
+    box-shadow:0 0 0 1px rgba(255,255,255,.2);transition:transform .12s, background .12s}
   input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.25);background:var(--accent)}
-  input[type=range]::-moz-range-thumb{
-    width:13px;height:13px;border-radius:50%;border:2px solid var(--bg);
-    background:var(--ink);cursor:pointer;
-  }
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;
+    border:2px solid var(--bg);background:var(--ink);cursor:pointer}
 
-  /* palette */
   .swatches{display:flex;gap:8px;margin-bottom:14px}
   .sw{position:relative;flex:1;aspect-ratio:1;border-radius:8px;overflow:hidden;
       box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);cursor:pointer}
-  .sw input{position:absolute;inset:-6px;width:130%;height:130%;border:none;
-            background:none;cursor:pointer;opacity:0}
+  .sw input{position:absolute;inset:-6px;width:130%;height:130%;border:none;background:none;cursor:pointer;opacity:0}
   .presets{display:flex;flex-wrap:wrap;gap:7px}
-  .preset{
-    font-size:11px;letter-spacing:.05em;
-    padding:6px 11px;border:1px solid var(--line);border-radius:20px;
-    color:var(--dim);background:none;cursor:pointer;
-    transition:all .15s;
-  }
+  .preset{font-size:11px;letter-spacing:.05em;padding:6px 11px;border:1px solid var(--line);
+    border-radius:20px;color:var(--dim);background:none;cursor:pointer;transition:all .15s}
   .preset:hover{color:var(--ink);border-color:rgba(255,255,255,.3)}
 
-  /* buttons */
   .btn-row{display:flex;gap:9px;margin-top:6px}
-  .btn{
-    flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+  .btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
     padding:11px 14px;border:1px solid var(--line);border-radius:10px;
     background:rgba(255,255,255,.03);color:var(--ink);
-    font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.06em;
-    cursor:pointer;transition:all .15s;
-  }
+    font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.06em;cursor:pointer;transition:all .15s}
   .btn:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.25)}
   .btn svg{width:14px;height:14px}
-  .btn.primary{
-    background:var(--accent);border-color:var(--accent);color:#11070c;font-weight:500;
-  }
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#11070c;font-weight:500}
   .btn.primary:hover{background:#ff5a92;box-shadow:0 8px 30px -10px var(--accent)}
   .btn.primary.busy{opacity:.6;pointer-events:none}
 
   .hint{font-size:10.5px;line-height:1.55;color:var(--dimmer);margin-top:12px;letter-spacing:.02em}
 
-  #toast{
-    position:fixed;bottom:24px;left:calc(50% - 180px);transform:translate(-50%,8px);
-    background:rgba(20,20,22,.92);border:1px solid var(--line);
-    backdrop-filter:blur(20px);
+  #toast{position:fixed;bottom:24px;left:calc(50% - 180px);transform:translate(-50%,8px);
+    background:rgba(20,20,22,.92);border:1px solid var(--line);backdrop-filter:blur(20px);
     padding:11px 20px;border-radius:10px;font-size:12px;letter-spacing:.04em;
-    opacity:0;pointer-events:none;transition:all .3s;z-index:50;
-  }
+    opacity:0;pointer-events:none;transition:all .3s;z-index:50}
   #toast.show{opacity:1;transform:translate(-50%,0)}
 </style>
 </head>
@@ -191,25 +143,10 @@
   <div class="brand">Flux<em>.</em></div>
   <div class="tagline">Gradient Studio · WebGL2</div>
 
-  <div class="group">
-    <h3>Field</h3>
-    <div id="field-ctrls"></div>
-  </div>
-
-  <div class="group">
-    <h3>Light & Angle</h3>
-    <div id="light-ctrls"></div>
-  </div>
-
-  <div class="group">
-    <h3>Silhouette</h3>
-    <div id="mask-ctrls"></div>
-  </div>
-
-  <div class="group">
-    <h3>Finish</h3>
-    <div id="finish-ctrls"></div>
-  </div>
+  <div class="group"><h3>Field</h3><div id="field-ctrls"></div></div>
+  <div class="group"><h3>Light & Angle</h3><div id="light-ctrls"></div></div>
+  <div class="group"><h3>Silhouette</h3><div id="mask-ctrls"></div></div>
+  <div class="group"><h3>Finish</h3><div id="finish-ctrls"></div></div>
 
   <div class="group">
     <h3>Palette</h3>
@@ -220,13 +157,13 @@
   <div class="group">
     <h3>Compose</h3>
     <div class="btn-row">
-      <button class="btn" id="playBtn">
-        <svg viewBox="0 0 14 14" fill="currentColor"><rect x="3" y="2.5" width="2.6" height="9"/><rect x="8.4" y="2.5" width="2.6" height="9"/></svg>
-        <span>Pause</span>
-      </button>
       <button class="btn" id="seedBtn">
         <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 4h7M2 4l2-2M2 4l2 2M12 10H5M12 10l-2-2M12 10l-2 2"/></svg>
-        <span>Shuffle</span>
+        <span>Shuffle Shape</span>
+      </button>
+      <button class="btn" id="colorBtn">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="7" cy="7" r="5.3"/><circle cx="5" cy="5.2" r="1" fill="currentColor" stroke="none"/><circle cx="9" cy="5.2" r="1" fill="currentColor" stroke="none"/><circle cx="6" cy="9" r="1" fill="currentColor" stroke="none"/></svg>
+        <span>Random Colors</span>
       </button>
     </div>
     <div class="btn-row">
@@ -243,7 +180,7 @@
 
 <script type="module">
 /* ════════════════════════════════════════════════════════════
-   FLUX — WebGL2 domain-warped gradient studio (MVP)
+   FLUX — WebGL2 domain-warped gradient studio (static)
    ════════════════════════════════════════════════════════════ */
 
 const VERT = `#version 300 es
@@ -255,13 +192,11 @@ precision highp float;
 out vec4 outColor;
 
 uniform vec2  uRes;
-uniform float uTime;
 uniform float uSeed;
 uniform float uScale;
 uniform float uWarp;
-uniform float uDetail;     // warp iterations feel via freq
-uniform float uAngle;      // light / gradient direction
-uniform float uLight;      // crease strength
+uniform float uAngle;     // light / gradient direction
+uniform float uLight;     // crease strength
 uniform float uContrast;
 uniform float uGamma;
 uniform float uGrain;
@@ -282,10 +217,11 @@ float vnoise(vec2 p){
   float c=hash21(i+vec2(0,1)), d=hash21(i+vec2(1,1));
   return mix(mix(a,b,u.x), mix(c,d,u.x), u.y);
 }
+// low-octave fbm — smooth, large forms (not turbulence)
 float fbm(vec2 p){
-  float v=0.0, a=0.5;
-  mat2 m=mat2(1.6,1.2,-1.2,1.6);
-  for(int i=0;i<5;i++){ v+=a*vnoise(p); p=m*p*uDetail; a*=0.5; }
+  float v=0.0, a=0.6;
+  mat2 m=mat2(1.4,1.0,-1.0,1.4);
+  for(int i=0;i<3;i++){ v+=a*vnoise(p); p=m*p; a*=0.5; }
   return v;
 }
 vec3 palette(float t){
@@ -299,13 +235,12 @@ vec3 palette(float t){
 void main(){
   vec2 c = (gl_FragCoord.xy - 0.5*uRes) / uRes.y;   // aspect-correct, centered
   vec2 p = c * uScale;
-  float t = uTime;
 
-  // ── domain warping (IQ) ─────────────────────────────
+  // ── gentle domain warp (single smooth gradient) ────
   vec2 q = vec2( fbm(p + uSeed),
                  fbm(p + vec2(5.2,1.3) + uSeed) );
-  vec2 r = vec2( fbm(p + uWarp*q + vec2(1.7,9.2) + 0.15*t),
-                 fbm(p + uWarp*q + vec2(8.3,2.8) - 0.12*t) );
+  vec2 r = vec2( fbm(p + uWarp*q + vec2(1.7,9.2)),
+                 fbm(p + uWarp*q + vec2(8.3,2.8)) );
   float h = fbm(p + uWarp*r);
 
   // ── directional crease shading (the "side angles") ──
@@ -328,18 +263,16 @@ void main(){
 
   vec3 col = palette(v) * mask;
 
-  // ── film grain ──────────────────────────────────────
-  float gr = hash21(gl_FragCoord.xy + t*60.0) - 0.5;
-  col += gr * uGrain;
+  // ── static film grain ───────────────────────────────
+  col += (hash21(gl_FragCoord.xy) - 0.5) * uGrain;
 
   outColor = vec4(max(col, 0.0), 1.0);
 }`;
 
 /* ─── State ─────────────────────────────────────────── */
 const params = {
-  scale:    { v:2.20, min:0.6,  max:5.0,  step:0.01, label:'Scale',    grp:'field'  },
-  warp:     { v:4.20, min:0.0,  max:8.0,  step:0.01, label:'Warp',     grp:'field'  },
-  detail:   { v:1.00, min:0.85, max:1.30, step:0.005,label:'Detail',   grp:'field'  },
+  scale:    { v:0.85, min:0.15, max:3.0,  step:0.005,label:'Scale',    grp:'field'  },
+  warp:     { v:1.10, min:0.0,  max:3.0,  step:0.01, label:'Warp',     grp:'field'  },
   angle:    { v:1.05, min:0.0,  max:6.283,step:0.001,label:'Angle',    grp:'light'  },
   light:    { v:1.60, min:0.0,  max:6.0,  step:0.01, label:'Crease',   grp:'light'  },
   spread:   { v:0.30, min:0.05, max:0.6,  step:0.005,label:'Spread',   grp:'mask'   },
@@ -347,30 +280,28 @@ const params = {
   soft:     { v:0.13, min:0.01, max:0.4,  step:0.005,label:'Softness', grp:'mask'   },
   contrast: { v:1.30, min:0.5,  max:2.5,  step:0.01, label:'Contrast', grp:'finish' },
   gamma:    { v:1.10, min:0.5,  max:2.2,  step:0.01, label:'Gamma',    grp:'finish' },
-  grain:    { v:0.085,min:0.0,  max:0.25, step:0.001,label:'Grain',    grp:'finish' },
-  speed:    { v:0.15, min:0.0,  max:1.0,  step:0.01, label:'Speed',    grp:'finish' },
+  grain:    { v:0.075,min:0.0,  max:0.25, step:0.001,label:'Grain',    grp:'finish' },
 };
 
 let palette = ['#000000','#5c0026','#e8197a','#ff6a1a','#ffd23a'];
 
 const PRESETS = {
-  'Magma':   ['#000000','#5c0026','#e8197a','#ff6a1a','#ffd23a'],
-  'Cyan':    ['#000208','#062b3d','#0fb6c6','#7df0d0','#eafff6'],
-  'Ember':   ['#040000','#3a0a02','#c2320a','#ff8a1e','#ffe27a'],
-  'Iris':    ['#02000a','#1e0a4a','#6a36d9','#c46bff','#f3e6ff'],
-  'Lime':    ['#020600','#143a06','#5cba1a','#b6f02a','#f2ffd0'],
-  'Mono':    ['#000000','#222222','#777777','#cccccc','#ffffff'],
+  'Magma': ['#000000','#5c0026','#e8197a','#ff6a1a','#ffd23a'],
+  'Cyan':  ['#000208','#062b3d','#0fb6c6','#7df0d0','#eafff6'],
+  'Ember': ['#040000','#3a0a02','#c2320a','#ff8a1e','#ffe27a'],
+  'Iris':  ['#02000a','#1e0a4a','#6a36d9','#c46bff','#f3e6ff'],
+  'Lime':  ['#020600','#143a06','#5cba1a','#b6f02a','#f2ffd0'],
+  'Mono':  ['#000000','#222222','#777777','#cccccc','#ffffff'],
 };
 
 let seed = Math.random()*100;
-let playing = true;
-let startT = performance.now();
-let clockT = 0;
+let needsRender = true;            // render-on-demand (static image)
+const invalidate = () => { needsRender = true; };
 
 /* ─── GL setup ──────────────────────────────────────── */
 const canvas = document.getElementById('gl');
-const gl = canvas.getContext('webgl2', { antialias:true, preserveDrawingBuffer:false });
-if(!gl){ document.body.innerHTML = '<p style="margin:auto;font-family:monospace">WebGL2 not supported in this browser.</p>'; throw new Error('no webgl2'); }
+const gl = canvas.getContext('webgl2', { antialias:true });
+if(!gl){ document.body.innerHTML = '<p style="margin:auto;font-family:monospace">WebGL2 not supported.</p>'; throw new Error('no webgl2'); }
 
 function compile(type, src){
   const s = gl.createShader(type);
@@ -386,24 +317,20 @@ if(!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramI
 gl.useProgram(prog);
 
 const U = {};
-for(const name of ['uRes','uTime','uSeed','uScale','uWarp','uDetail','uAngle','uLight','uContrast','uGamma','uGrain','uSpread','uThresh','uSoft','uC0','uC1','uC2','uC3','uC4'])
+for(const name of ['uRes','uSeed','uScale','uWarp','uAngle','uLight','uContrast','uGamma','uGrain','uSpread','uThresh','uSoft','uC0','uC1','uC2','uC3','uC4'])
   U[name] = gl.getUniformLocation(prog, name);
 
-const vao = gl.createVertexArray();
-gl.bindVertexArray(vao);
+gl.bindVertexArray(gl.createVertexArray());
 
 function hex2rgb(h){
   const v = parseInt(h.slice(1),16);
   return [((v>>16)&255)/255, ((v>>8)&255)/255, (v&255)/255];
 }
-
 function setUniforms(w, h){
   gl.uniform2f(U.uRes, w, h);
-  gl.uniform1f(U.uTime, clockT);
   gl.uniform1f(U.uSeed, seed);
   gl.uniform1f(U.uScale, params.scale.v);
   gl.uniform1f(U.uWarp, params.warp.v);
-  gl.uniform1f(U.uDetail, params.detail.v);
   gl.uniform1f(U.uAngle, params.angle.v);
   gl.uniform1f(U.uLight, params.light.v);
   gl.uniform1f(U.uContrast, params.contrast.v);
@@ -418,23 +345,24 @@ function setUniforms(w, h){
   gl.uniform3fv(U.uC4, cols[4]);
 }
 
-/* ─── Preview sizing ───────────────────────────────── */
+/* ─── Preview (render on demand) ───────────────────── */
 function resize(){
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const r = canvas.getBoundingClientRect();
   const w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
-  if(canvas.width !== w || canvas.height !== h){ canvas.width = w; canvas.height = h; }
+  if(canvas.width !== w || canvas.height !== h){ canvas.width=w; canvas.height=h; invalidate(); }
 }
 window.addEventListener('resize', resize);
 
-/* ─── Render loop ──────────────────────────────────── */
 function frame(){
-  if(playing) clockT = (performance.now() - startT)/1000 * params.speed.v;
   resize();
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  gl.viewport(0,0,canvas.width,canvas.height);
-  setUniforms(canvas.width, canvas.height);
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  if(needsRender){
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0,0,canvas.width,canvas.height);
+    setUniforms(canvas.width, canvas.height);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    needsRender = false;
+  }
   requestAnimationFrame(frame);
 }
 
@@ -464,28 +392,23 @@ function exportPNG(){
   gl.readPixels(0,0,W,H,gl.RGBA,gl.UNSIGNED_BYTE,px);
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  gl.deleteFramebuffer(fbo);
-  gl.deleteTexture(tex);
+  gl.deleteFramebuffer(fbo); gl.deleteTexture(tex);
+  invalidate();
 
-  // flip vertically (GL origin is bottom-left)
   const out = document.createElement('canvas');
-  out.width = W; out.height = H;
+  out.width=W; out.height=H;
   const ctx = out.getContext('2d');
   const img = ctx.createImageData(W, H);
-  for(let y=0;y<H;y++){
-    const src = (H-1-y)*W*4, dst = y*W*4;
+  for(let y=0;y<H;y++){                       // flip vertically (GL origin bottom-left)
+    const src=(H-1-y)*W*4, dst=y*W*4;
     img.data.set(px.subarray(src, src+W*4), dst);
   }
   ctx.putImageData(img, 0, 0);
-
   out.toBlob(blob=>{
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `flux_${Date.now()}.png`;
-    a.click();
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob); a.download=`flux_${Date.now()}.png`; a.click();
     URL.revokeObjectURL(a.href);
-    btn.classList.remove('busy');
-    toast('Exported · 1080×1920 PNG');
+    btn.classList.remove('busy'); toast('Exported · 1080×1920 PNG');
   }, 'image/png');
 }
 
@@ -499,53 +422,59 @@ function makeSlider(key){
   const val = wrap.querySelector('.val');
   const fmt = v => (p.step < 0.01 ? v.toFixed(3) : v.toFixed(2));
   val.textContent = fmt(p.v);
-  input.addEventListener('input', ()=>{ p.v=parseFloat(input.value); val.textContent=fmt(p.v); });
+  input.addEventListener('input', ()=>{ p.v=parseFloat(input.value); val.textContent=fmt(p.v); invalidate(); });
   wrap.appendChild(input);
-  p._input = input; p._val = val; p._fmt = fmt;
+  p._input=input; p._val=val; p._fmt=fmt;
   return wrap;
 }
-for(const key in params){
-  const grp = params[key].grp;
-  document.getElementById(grp+'-ctrls').appendChild(makeSlider(key));
-}
+for(const key in params)
+  document.getElementById(params[key].grp+'-ctrls').appendChild(makeSlider(key));
 
-// swatches
 function buildSwatches(){
   const c = document.getElementById('swatches'); c.innerHTML='';
   palette.forEach((hex,i)=>{
-    const sw = document.createElement('div'); sw.className='sw'; sw.style.background=hex;
-    const inp = document.createElement('input'); inp.type='color'; inp.value=hex;
-    inp.addEventListener('input', ()=>{ palette[i]=inp.value; sw.style.background=inp.value; });
+    const sw=document.createElement('div'); sw.className='sw'; sw.style.background=hex;
+    const inp=document.createElement('input'); inp.type='color'; inp.value=hex;
+    inp.addEventListener('input', ()=>{ palette[i]=inp.value; sw.style.background=inp.value; invalidate(); });
     sw.appendChild(inp); c.appendChild(sw);
   });
 }
 buildSwatches();
 
-// presets
 const presetBox = document.getElementById('presets');
 for(const name in PRESETS){
-  const b = document.createElement('button'); b.className='preset'; b.textContent=name;
-  b.addEventListener('click', ()=>{ palette = PRESETS[name].slice(); buildSwatches(); });
+  const b=document.createElement('button'); b.className='preset'; b.textContent=name;
+  b.addEventListener('click', ()=>{ palette=PRESETS[name].slice(); buildSwatches(); invalidate(); });
   presetBox.appendChild(b);
 }
 
-// play / pause
-const playBtn = document.getElementById('playBtn');
-playBtn.addEventListener('click', ()=>{
-  playing = !playing;
-  if(playing) startT = performance.now() - clockT/Math.max(params.speed.v,0.0001)*1000;
-  playBtn.querySelector('span').textContent = playing ? 'Pause' : 'Play';
-});
+/* ─── Color randomizer (dark → vivid → bright drift) ─ */
+function hsl2hex(h,s,l){
+  h=((h%360)+360)%360; s/=100; l/=100;
+  const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l);
+  const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+  const to=x=>Math.round(x*255).toString(16).padStart(2,'0');
+  return '#'+to(f(0))+to(f(8))+to(f(4));
+}
+function randomizeColors(){
+  const base=Math.random()*360, dir=Math.random()<0.5?1:-1, drift=40+Math.random()*70;
+  palette=[
+    '#000000',
+    hsl2hex(base,             82, 16),
+    hsl2hex(base+dir*drift*0.3, 88, 46),
+    hsl2hex(base+dir*drift*0.7, 92, 56),
+    hsl2hex(base+dir*drift,     95, 70),
+  ];
+  buildSwatches(); invalidate();
+}
 
-// shuffle
 document.getElementById('seedBtn').addEventListener('click', ()=>{
-  seed = Math.random()*100;
-  params.angle.v = Math.random()*6.283;
-  params.warp.v  = 2.5 + Math.random()*4;
-  params.angle._input.value = params.angle.v; params.angle._val.textContent = params.angle._fmt(params.angle.v);
-  params.warp._input.value  = params.warp.v;  params.warp._val.textContent  = params.warp._fmt(params.warp.v);
+  seed=Math.random()*100;
+  params.angle.v=Math.random()*6.283;
+  params.angle._input.value=params.angle.v; params.angle._val.textContent=params.angle._fmt(params.angle.v);
+  invalidate();
 });
-
+document.getElementById('colorBtn').addEventListener('click', randomizeColors);
 document.getElementById('exportBtn').addEventListener('click', exportPNG);
 
 function toast(msg){

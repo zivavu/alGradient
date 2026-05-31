@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flux — Gradient Studio</title>
+<title>alGrad — Gradient Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -144,7 +144,7 @@
 </div>
 
 <aside class="panel">
-  <div class="brand">Flux<em>.</em></div>
+  <div class="brand">al<em>Grad</em></div>
   <div class="tagline">Gradient Studio · WebGL2</div>
 
   <div class="group">
@@ -164,10 +164,6 @@
 
   <div class="group">
     <h3>Palette</h3>
-    <div class="ctrl" style="margin-bottom:10px">
-      <div class="row"><label>Lightness</label><span class="val" id="palLightVal">50%</span></div>
-      <input type="range" id="palLightSlider" min="0" max="100" step="1" value="50">
-    </div>
     <div class="swatches" id="swatches"></div>
     <div class="picker-wrap" id="picker">
       <div class="sl-area" id="slArea"><div class="sl-cursor" id="slCursor"></div></div>
@@ -191,6 +187,10 @@
         Random Colors
       </button>
     </div>
+    <div class="ctrl" style="margin-bottom:16px; margin-top:16px">
+      <div class="row"><label>Shuffle Color Brightness</label><span class="val" id="palLightVal">50%</span></div>
+      <input type="range" id="palLightSlider" min="0" max="100" step="1" value="50">
+    </div>
     <div class="btn-row">
       <button class="btn primary" id="exportBtn">
         <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1.5v8M4 7l3 3 3-3M2 12.5h10"/></svg>
@@ -205,7 +205,7 @@
 
 <script type="module">
 /* ════════════════════════════════════════════════════════════
-   FLUX — WebGL2 multi-mode gradient studio
+   alGrad — WebGL2 multi-mode gradient studio
    ════════════════════════════════════════════════════════════ */
 
 const VERT = `#version 300 es
@@ -349,7 +349,7 @@ const params = {
   soft:     {v:0.01, min:0.01, max:0.4,  step:0.005, label:'Softness',  grp:'mask'  },
   contrast: {v:1.30, min:0.5,  max:2.5,  step:0.01,  label:'Contrast',  grp:'finish'},
   gamma:    {v:1.10, min:0.5,  max:2.2,  step:0.01,  label:'Gamma',     grp:'finish'},
-  grain:    {v:2.0,  min:0.0,  max:10.0, step:0.05,  label:'Grain',     grp:'finish'},
+  grain:    {v:0.0,  min:0.0,  max:10.0, step:0.05,  label:'Grain',     grp:'finish'},
 };
 
 let palette = ['#000000','#5c0026','#e8197a','#ff6a1a','#ffd23a'];
@@ -501,6 +501,29 @@ glCanvas.addEventListener('pointermove', e => {
 glCanvas.addEventListener('pointerup',   () => { panDrag=null; glCanvas.style.cursor=''; });
 glCanvas.addEventListener('pointercancel',()=> { panDrag=null; glCanvas.style.cursor=''; });
 glCanvas.addEventListener('dblclick',    () => { panOffset=[0,0]; invalidate(); });
+glCanvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect = glCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const H  = rect.height;
+  // canvas-space coords of the cursor (WebGL Y-up)
+  const cx = (mx - rect.width*0.5) / H;
+  const cy = (H*0.5 - my) / H;
+
+  const oldScale = params.scale.v;
+  const factor   = e.deltaY > 0 ? 1.1 : 1/1.1;
+  const newScale = Math.min(Math.max(oldScale * factor, params.scale.min), params.scale.max);
+
+  // keep the shader-space point under the cursor fixed
+  panOffset[0] += cx * (oldScale - newScale);
+  panOffset[1] += cy * (oldScale - newScale);
+
+  params.scale.v = newScale;
+  params.scale._input.value = newScale;
+  params.scale._val.textContent = params.scale._fmt(newScale);
+  invalidate();
+}, {passive: false});
 
 /* ─── Frame sizing ──────────────────────────────────── */
 const frameEl = document.getElementById('frame');
@@ -700,7 +723,7 @@ function randomizeColors(){
 
   palette = Array.from({length:N},(_,i)=>{
     const t  = i/(N-1);
-    const te = Math.pow(t, ease);
+    const te = t ** ease;
     const h  = baseHue + hueSpread*te;
     const l  = i===0 ? randIn(0.01,0.05) : lDark + (lLight-lDark)*te;
     const s  = i===0 ? randIn(0.5,0.9)   : satEnds + (satPeak-satEnds)*Math.sin(Math.PI*t);

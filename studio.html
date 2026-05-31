@@ -97,8 +97,8 @@
     border-radius:20px;color:var(--dim);background:none;cursor:pointer;transition:all .15s}
   .preset:hover{color:var(--ink);border-color:rgba(255,255,255,.3)}
 
-  .picker-wrap{display:none;gap:10px;margin-top:12px;padding:12px;
-    background:var(--bg);border:1px solid var(--line);border-radius:10px;flex-direction:column}
+  .picker-wrap{display:none;gap:10px;margin-top:12px;margin-bottom:12px;padding:12px;
+    background:var(--bg);border:1px solid var(--line);border-radius:10px;flex-direction:column;}
   .picker-wrap.open{display:flex}
   .sl-area{position:relative;width:100%;aspect-ratio:1.6;border-radius:6px;overflow:hidden;
     cursor:crosshair;background:linear-gradient(to bottom,transparent,#000),linear-gradient(to right,#fff,#f00)}
@@ -138,7 +138,7 @@
 <div class="stage" id="stage">
   <div class="frame" id="frame">
     <canvas id="gl"></canvas>
-    <div class="stamp" id="modeStamp">Flow</div>
+    <div class="stamp">Flow</div>
     <div class="res-badge" id="resBadge">1080 × 1920</div>
   </div>
 </div>
@@ -146,11 +146,6 @@
 <aside class="panel">
   <div class="brand">Flux<em>.</em></div>
   <div class="tagline">Gradient Studio · WebGL2</div>
-
-  <div class="group">
-    <h3>Pattern</h3>
-    <div class="btn-grid col3" id="modes"></div>
-  </div>
 
   <div class="group">
     <h3>Canvas</h3>
@@ -169,6 +164,10 @@
 
   <div class="group">
     <h3>Palette</h3>
+    <div class="ctrl" style="margin-bottom:10px">
+      <div class="row"><label>Lightness</label><span class="val" id="palLightVal">50%</span></div>
+      <input type="range" id="palLightSlider" min="0" max="100" step="1" value="50">
+    </div>
     <div class="swatches" id="swatches"></div>
     <div class="picker-wrap" id="picker">
       <div class="sl-area" id="slArea"><div class="sl-cursor" id="slCursor"></div></div>
@@ -220,6 +219,7 @@ out vec4 outColor;
 #define PI 3.14159265359
 
 uniform vec2  uRes;
+uniform vec2  uOffset;
 uniform float uSeed;
 uniform float uScale;
 uniform float uWarp;
@@ -231,7 +231,6 @@ uniform float uGrain;
 uniform float uSpread;
 uniform float uThresh;
 uniform float uSoft;
-uniform int   uMode;
 uniform vec3  uC0,uC1,uC2,uC3,uC4;
 
 float hash21(vec2 p){
@@ -256,38 +255,6 @@ float modeFlow(vec2 p){
   vec2 r=vec2(fbm(p+uWarp*q+vec2(1.7,9.2)),fbm(p+uWarp*q+vec2(8.3,2.8)));
   return fbm(p+uWarp*r);
 }
-float modeMarble(vec2 p){
-  float n=fbm5(p+uSeed)*uWarp, n2=fbm(p*1.6+uSeed+3.14)*uWarp*0.5;
-  float dir=p.x*cos(uAngle)+p.y*sin(uAngle);
-  return sin((dir*3.+n*4.+n2*2.)*PI)*0.5+0.5;
-}
-float modeRings(vec2 p){
-  float n=fbm(p*0.9+uSeed), n2=fbm(p*1.5+uSeed+7.3);
-  float r=sqrt(dot(p,p)+0.04);   // softened radius: no center singularity / seam
-  return sin((r+uWarp*(n*0.55+n2*0.2))*7.5*PI)*0.5+0.5;
-}
-float modeBands(vec2 p){
-  float n=fbm5(p+uSeed), n2=fbm(p*0.7+vec2(uSeed+2.1,uSeed-1.3));
-  vec2 perp=vec2(-sin(uAngle),cos(uAngle));
-  return sin((dot(p,perp)*4.5+n*uWarp*5.+n2*uWarp*2.)*PI)*0.5+0.5;
-}
-float modeSpiral(vec2 p){
-  float r=length(p), a=atan(p.y,p.x)/(2.*PI);
-  float t=a+r*uWarp*1.2;
-  float n=fbm(vec2(t*2.5,r*2.+uSeed));
-  return fbm(vec2(t*2.+n*1.4,r*1.8+n*0.9)+uSeed+1.3);
-}
-float modeCells(vec2 p){
-  vec2 wp=p+fbm(p+uSeed)*uWarp*0.6;
-  vec2 cell=floor(wp); float minD=10.,minD2=10.;
-  for(int dy=-2;dy<=2;dy++) for(int dx=-2;dx<=2;dx++){
-    vec2 nc=cell+vec2(dx,dy);
-    vec2 pt=nc+vec2(hash21(nc+uSeed),hash21(nc+uSeed+7.3));
-    float d=length(wp-pt);
-    if(d<minD){minD2=minD;minD=d;} else if(d<minD2){minD2=d;}
-  }
-  return smoothstep(0.,.5,minD2-minD);
-}
 
 vec3 palette(float t){
   t=clamp(t,0.,1.);
@@ -299,15 +266,9 @@ vec3 palette(float t){
 
 void main(){
   vec2 c=(gl_FragCoord.xy-0.5*uRes)/uRes.y;
-  vec2 p=c*uScale;
+  vec2 p=c*uScale+uOffset;
 
-  float h;
-  if     (uMode==0) h=modeFlow(p);
-  else if(uMode==1) h=modeMarble(p);
-  else if(uMode==2) h=modeRings(p);
-  else if(uMode==3) h=modeBands(p);
-  else if(uMode==4) h=modeSpiral(p);
-  else              h=modeCells(p);
+  float h = modeFlow(p);
 
   vec2 g=vec2(dFdx(h),dFdy(h))*uRes.y;
   vec3 n=normalize(vec3(-g*uLight,1.));
@@ -350,11 +311,6 @@ void main(){
 }`;
 
 /* ─── Constants ─────────────────────────────────────── */
-const MODES = [
-  {id:0,name:'Flow'  },{id:1,name:'Marble'},{id:2,name:'Rings'},
-  {id:3,name:'Bands' },{id:4,name:'Spiral'},{id:5,name:'Cells'},
-];
-
 // base = px on the shorter side at 1× scale
 const RATIOS = [
   {label:'9:16', w:9,  h:16, base:1080},
@@ -363,6 +319,7 @@ const RATIOS = [
   {label:'3:4',  w:3,  h:4,  base:1080},
   {label:'16:9', w:16, h:9,  base:1080},
   {label:'3:2',  w:3,  h:2,  base:1080},
+  {label:'9:20', w:9,  h:20, base:1080},
 ];
 
 const SCALES = [
@@ -377,7 +334,6 @@ const AA_OPTS = [
   {label:'4×',  ss:4},
 ];
 
-let currentMode  = 0;
 let currentRatio = 1;   // index into RATIOS — default 1:1
 let currentScale = 0;   // index into SCALES
 let currentAA    = 1;   // index into AA_OPTS — default 2×
@@ -443,8 +399,8 @@ const prog     = link(VERT, FRAG);
 const progBlit = link(VERT_BLIT, FRAG_BLIT);
 
 const U={};
-for(const n of ['uRes','uSeed','uScale','uWarp','uAngle','uLight','uContrast','uGamma','uGrain',
-                 'uSpread','uThresh','uSoft','uMode','uC0','uC1','uC2','uC3','uC4'])
+for(const n of ['uRes','uOffset','uSeed','uScale','uWarp','uAngle','uLight','uContrast','uGamma','uGrain',
+                 'uSpread','uThresh','uSoft','uC0','uC1','uC2','uC3','uC4'])
   U[n]=gl.getUniformLocation(prog,n);
 const UB={};
 for(const n of ['uTex','uLod','uGrain']) UB[n]=gl.getUniformLocation(progBlit,n);
@@ -506,6 +462,7 @@ function hex2rgb(h){ const v=parseInt(h.slice(1),16); return [((v>>16)&255)/255,
 
 function setUniforms(w,h){
   gl.uniform2f(U.uRes,w,h);
+  gl.uniform2f(U.uOffset,panOffset[0],panOffset[1]);
   gl.uniform1f(U.uSeed,seed);
   gl.uniform1f(U.uScale,params.scale.v);
   gl.uniform1f(U.uWarp,params.warp.v);
@@ -517,11 +474,33 @@ function setUniforms(w,h){
   gl.uniform1f(U.uSpread,params.spread.v);
   gl.uniform1f(U.uThresh,params.thresh.v);
   gl.uniform1f(U.uSoft,params.soft.v);
-  gl.uniform1i(U.uMode,currentMode);
   const cols=palette.map(hex2rgb);
   gl.uniform3fv(U.uC0,cols[0]);gl.uniform3fv(U.uC1,cols[1]);
   gl.uniform3fv(U.uC2,cols[2]);gl.uniform3fv(U.uC3,cols[3]);gl.uniform3fv(U.uC4,cols[4]);
 }
+
+/* ─── Pan ───────────────────────────────────────────── */
+let panOffset = [0, 0];
+let panDrag = null;  // {x, y, ox, oy} on pointerdown
+
+const glCanvas = document.getElementById('gl');
+glCanvas.addEventListener('pointerdown', e => {
+  if(e.button !== 0) return;
+  glCanvas.setPointerCapture(e.pointerId);
+  panDrag = {x: e.clientX, y: e.clientY, ox: panOffset[0], oy: panOffset[1]};
+  glCanvas.style.cursor = 'grabbing';
+});
+glCanvas.addEventListener('pointermove', e => {
+  if(!panDrag) return;
+  const canvas = glCanvas;
+  const scale = params.scale.v / canvas.clientHeight;
+  panOffset[0] = panDrag.ox - (e.clientX - panDrag.x) * scale;
+  panOffset[1] = panDrag.oy + (e.clientY - panDrag.y) * scale;
+  invalidate();
+});
+glCanvas.addEventListener('pointerup',   () => { panDrag=null; glCanvas.style.cursor=''; });
+glCanvas.addEventListener('pointercancel',()=> { panDrag=null; glCanvas.style.cursor=''; });
+glCanvas.addEventListener('dblclick',    () => { panOffset=[0,0]; invalidate(); });
 
 /* ─── Frame sizing ──────────────────────────────────── */
 const frameEl = document.getElementById('frame');
@@ -587,7 +566,7 @@ function exportPNG(){
   out.toBlob(blob=>{
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
     const {label}=RATIOS[currentRatio], sc=SCALES[currentScale].label.replace('×','x');
-    a.download=`flux_${MODES[currentMode].name.toLowerCase()}_${label.replace(':','x')}_${sc}_${Date.now()}.png`;
+    a.download=`flux_${label.replace(':','x')}_${sc}_${Date.now()}.png`;
     a.click(); URL.revokeObjectURL(a.href);
     btn.classList.remove('busy'); toast(`Exported · ${W}×${H} PNG`);
   },'image/png');
@@ -618,21 +597,6 @@ function makeSlider(key){
   return wrap;
 }
 for(const key in params) document.getElementById(params[key].grp+'-ctrls').appendChild(makeSlider(key));
-
-// Mode buttons
-const modeGrid=document.getElementById('modes');
-MODES.forEach(m=>{
-  const b=document.createElement('button'); b.className='grid-btn'+(m.id===0?' active':'');
-  b.textContent=m.name;
-  b.addEventListener('click',()=>{
-    currentMode=m.id;
-    modeGrid.querySelectorAll('.grid-btn').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    document.getElementById('modeStamp').textContent=m.name;
-    invalidate();
-  });
-  modeGrid.appendChild(b);
-});
 
 // Ratio buttons
 const ratioGrid=document.getElementById('ratios');
@@ -694,24 +658,60 @@ for(const name in PRESETS){
   document.getElementById('presets').appendChild(b);
 }
 
+// Palette lightness control (0–100, maps to lLight range)
+let paletteLight = 50;
+const palLightSlider = document.getElementById('palLightSlider');
+const palLightVal    = document.getElementById('palLightVal');
+palLightSlider.addEventListener('input', () => {
+  paletteLight = parseInt(palLightSlider.value);
+  palLightVal.textContent = paletteLight + '%';
+});
+
 // Color randomizer
-function randomHex(){
-  const h=Math.random()*360, s=40+Math.random()*60, l=0+Math.random()*100;
-  const k=n=>(n+h/30)%12, a=(s/100)*Math.min(l/100,1-l/100);
-  const f=n=>(l/100)-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
-  const to=x=>Math.round(x*255).toString(16).padStart(2,'0');
+// h in degrees, s & l in 0..1
+function hslHex(h,s,l){
+  h=((h%360)+360)%360;
+  const a=s*Math.min(l,1-l);
+  const f=n=>{const k=(n+h/30)%12; return l-a*Math.max(-1,Math.min(k-3,9-k,1));};
+  const to=x=>Math.round(Math.max(0,Math.min(1,x))*255).toString(16).padStart(2,'0');
   return '#'+to(f(0))+to(f(8))+to(f(4));
 }
+function randomHex(){ return hslHex(Math.random()*360, 0.4+Math.random()*0.5, 0.2+Math.random()*0.6); }
+
+// Build a coherent 5-stop ramp: lightness climbs dark→bright, hue drifts smoothly,
+// saturation peaks in the midtones — the structure shared by all the good presets.
 function randomizeColors(){
-  palette = Array.from({length:5}, randomHex);
+  const N=5;
+  const baseHue=Math.random()*360;
+
+  // Hue strategy: how far the hue travels across the ramp.
+  const strat=Math.random(), dir=Math.random()<0.5?-1:1;
+  let hueSpread;
+  if(strat<0.5)      hueSpread=randIn(-45,45);            // analogous — calm, cohesive
+  else if(strat<0.85)hueSpread=dir*randIn(60,140);        // warm/cool sweep (magma/ember-like)
+  else               hueSpread=dir*randIn(150,200);       // near-complementary accent
+
+  const ease   = randIn(0.75,1.7);          // lightness curve shape (where the midtones sit)
+  const maxL   = 0.15 + (paletteLight/100)*0.75;  // slider: 0%→0.15  100%→0.90
+  const lDark  = randIn(0.02,0.08);
+  const lLight = randIn(maxL*0.75, maxL);
+  const satPeak= randIn(0.65,0.95);         // midtone vividness
+  const satEnds= randIn(0.25,0.5);          // tamed dark/light ends
+
+  palette = Array.from({length:N},(_,i)=>{
+    const t  = i/(N-1);
+    const te = Math.pow(t, ease);
+    const h  = baseHue + hueSpread*te;
+    const l  = i===0 ? randIn(0.01,0.05) : lDark + (lLight-lDark)*te;
+    const s  = i===0 ? randIn(0.5,0.9)   : satEnds + (satPeak-satEnds)*Math.sin(Math.PI*t);
+    return hslHex(h,s,l);
+  });
   buildSwatches(); invalidate();
 }
 
+function randIn(min,max){return min+Math.random()*(max-min);}
 document.getElementById('seedBtn').addEventListener('click',()=>{
   seed=Math.random()*100;
-  params.angle.v=Math.random()*6.283;
-  params.angle._input.value=params.angle.v;
-  params.angle._val.textContent=params.angle._fmt(params.angle.v);
   invalidate();
 });
 document.getElementById('colorBtn').addEventListener('click', randomizeColors);
